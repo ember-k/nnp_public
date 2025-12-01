@@ -1,3 +1,13 @@
+/* EMBER'S NOTES:
+- you will have to change (only) this file and the kernel files for the project
+- You may work 100% in global memory to get full credit, but you also may optimize things further
+- you only need to parallelize the train method
+- (the predict method can also be parallelized - OPTIONAL)
+- A simple implementation out of global memory should run for ~30s on Darwin
+- You will need to take the various vector x matrix operations in the train() method and parallelize them.
+
+*/ 
+
 /*
     nnp.cu
 
@@ -75,6 +85,23 @@ void train_model(MODEL* model){
     init_weights(model->W2, H1*H2); init_weights(model->b2, H2);
     init_weights(model->W3, H2*CLASSES); init_weights(model->b3, CLASSES);
 
+    //start of addition
+    float *d_W1, *d_W2, *d_W3, *d_b1, *d_b2, *d_b3;
+    cudaMalloc(&d_W1, SIZE*H1*sizeof(float));
+    cudaMalloc(&d_W2, H1*H2*sizeof(float));
+    cudaMalloc(&d_W3, H2*CLASSES*sizeof(float));
+    cudaMalloc(&d_b1, H1*sizeof(float));
+    cudaMalloc(&d_b2, H2*sizeof(float));
+    cudaMalloc(&d_b3, CLASSES*sizeof(float));
+    cudaMemcpy(d_W1, model->W1, SIZE*H1*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_W2, model->W2, H1*H2*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_W3, model->W3, H2*CLASSES*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b1, model->b1, H1*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b2, model->b2, H2*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b3, model->b3, CLASSES*sizeof(float), cudaMemcpyHostToDevice);
+
+    //end of addition
+
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss=0;
         for (int n=0; n<NUM_TRAIN; n++) {
@@ -139,6 +166,7 @@ void train_model(MODEL* model){
         }
         printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
+    cudaFree(d_W1); cudaFree(d_W2); cudaFree(d_W3); cudaFree(d_b1); cudaFree(d_b2); cudaFree(d_b3);
 }
 
 /* Save the trained model to a binary file
