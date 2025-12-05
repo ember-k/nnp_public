@@ -19,7 +19,7 @@ typedef struct tagMODEL{
 } MODEL;
 
 // Activation function and derivative
-float relu(float x);
+__host__ __device__ float relu(float x);
 float drelu(float y);
 
 //function prototypes
