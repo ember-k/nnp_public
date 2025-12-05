@@ -8,3 +8,5 @@
 
 // Kernel function prototypes
 //__global__ void test_kernel();
+
+__device__ float relu(float x);

@@ -42,6 +42,7 @@
 */
 float relu(float x) { return x > 0 ? x : 0; }
 
+
 /* Derivative of ReLU activation function
 * Arguments:
 *   y: output value from ReLU function
@@ -49,6 +50,7 @@ float relu(float x) { return x > 0 ? x : 0; }
 *   derivative value
 */
 float drelu(float y) { return y > 0 ? 1 : 0; }
+
 
 /* Softmax activation function
 * Arguments:
@@ -105,13 +107,20 @@ void train_model(MODEL* model){
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss=0;
         for (int n=0; n<NUM_TRAIN; n++) {
+            float *d_v;
+            cudaMalloc(&d_v, H1*sizeof(float));
+            cudaMemcpy(d_v, train_data[n], SIZE*H1*sizeof(float), cudaMemcpyHostToDevice);
+
+            train_data[n]
             // ---------- Forward ----------
-            float h1[H1], h1a[H1];
-            for (int j=0;j<H1;j++){
-                h1[j]=model->b1[j];
-                for (int i=0;i<SIZE;i++) h1[j]+=train_data[n][i]*model->W1[i*H1+j];
-                h1a[j]=relu(h1[j]);
-            }
+            float d_h1a[H1];
+
+            int threads = min(SIZE, 256);  // min(row_num, 256);              
+            int blocks = H1; 
+            int shm = threads * sizeof(float);
+            hidden_layer_kernel<<<blocks, threads, shm>>>(d_W1, d_v, d_b1, d_h1a, SIZE, H1);
+
+
             float h2[H2], h2a[H2];
             for (int j=0;j<H2;j++){
                 h2[j]=model->b2[j];
@@ -163,6 +172,8 @@ void train_model(MODEL* model){
                 for (int j=0;j<H1;j++)
                     model->W1[i*H1+j]+=LR*delta1[j]*train_data[n][i];
             for (int j=0;j<H1;j++) model->b1[j]+=LR*delta1[j];
+
+            cudaFree(d_v);
         }
         printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
