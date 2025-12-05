@@ -102,24 +102,25 @@ void train_model(MODEL* model){
     cudaMemcpy(d_b2, model->b2, H2*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_b3, model->b3, CLASSES*sizeof(float), cudaMemcpyHostToDevice);
 
+    float *d_v;
+    cudaMalloc(&d_v, H1*sizeof(float));
     //end of addition
+    float* d_h1a;
+    cudaMalloc(&d_h1a, H1 * sizeof(float));
 
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss=0;
         for (int n=0; n<NUM_TRAIN; n++) {
-            float *d_v;
-            cudaMalloc(&d_v, H1*sizeof(float));
-            cudaMemcpy(d_v, train_data[n], SIZE*H1*sizeof(float), cudaMemcpyHostToDevice);
-
-            train_data[n]
+            cudaMemcpy(d_v, train_data[n], SIZE*sizeof(float), cudaMemcpyHostToDevice);
             // ---------- Forward ----------
-            float d_h1a[H1];
 
             int threads = min(SIZE, 256);  // min(row_num, 256);              
             int blocks = H1; 
             int shm = threads * sizeof(float);
             hidden_layer_kernel<<<blocks, threads, shm>>>(d_W1, d_v, d_b1, d_h1a, SIZE, H1);
 
+            float h1a[H1];
+            cudaMemcpy(h1a, d_h1a, H1 * sizeof(float), cudaMemcpyDeviceToHost);
 
             float h2[H2], h2a[H2];
             for (int j=0;j<H2;j++){
@@ -172,12 +173,10 @@ void train_model(MODEL* model){
                 for (int j=0;j<H1;j++)
                     model->W1[i*H1+j]+=LR*delta1[j]*train_data[n][i];
             for (int j=0;j<H1;j++) model->b1[j]+=LR*delta1[j];
-
-            cudaFree(d_v);
         }
         printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
-    cudaFree(d_W1); cudaFree(d_W2); cudaFree(d_W3); cudaFree(d_b1); cudaFree(d_b2); cudaFree(d_b3);
+    cudaFree(d_W1); cudaFree(d_W2); cudaFree(d_W3); cudaFree(d_b1); cudaFree(d_b2); cudaFree(d_b3); cudaFree(d_h1a); cudaFree(d_v);
 }
 
 /* Save the trained model to a binary file

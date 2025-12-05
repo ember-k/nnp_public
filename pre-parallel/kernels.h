@@ -10,3 +10,11 @@
 //__global__ void test_kernel();
 
 __device__ float relu(float x);
+hidden_layer_kernel(
+    const float* matrix,
+    const float* vector,
+    const float* b,
+    float* result,
+    int row_num,
+    int col_num
+);
