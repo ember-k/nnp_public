@@ -90,7 +90,7 @@ void train_model(MODEL* model){
     //start of addition
     float *d_W1, *d_W2, *d_W3, *d_b1, *d_b2, *d_b3;
     float *d_delta1, *d_delta2, *d_delta3;
-    float *d_v, *d_out;
+    float *d_v, *d_h1a, *dh2a, *d_out;
     cudaMalloc(&d_W1, SIZE*H1*sizeof(float));
     cudaMalloc(&d_W2, H1*H2*sizeof(float));
     cudaMalloc(&d_W3, H2*CLASSES*sizeof(float));
