@@ -1,0 +1,15 @@
+Script started on Fri Dec  5 23:58:02 2025
+]0;emberk@:~/nnp_public/pre-parallel[?1034h[emberk@r2v02 pre-parallel]$ srun ./nnp_train
+slurmstepd: error: execve(): /home/4236/nnp_public/pre-parallel/./nnp_train: No such file or directory
+srun: error: r2v02: task 0: Exited with exit code 2
+]0;emberk@:~/nnp_public/pre-parallel[emberk@r2v02 pre-parallel]$ srun ./nnp train
+Epoch 0, Loss=0.3111
+Epoch 1, Loss=0.1546
+Epoch 2, Loss=0.1200
+Epoch 3, Loss=0.1035
+Epoch 4, Loss=0.0895
+Trained model in 19 seconds
+]0;emberk@:~/nnp_public/pre-parallel[emberk@r2v02 pre-parallel]$ exit
+exit
+
+Script done on Fri Dec  5 23:58:47 2025
