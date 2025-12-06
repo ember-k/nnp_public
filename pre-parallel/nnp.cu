@@ -40,7 +40,7 @@
 * Returns:
 *   activated value based on ReLU function 
 */
-__host__ __device__ float relu(float x) { return x > 0 ? x : 0; }
+float relu(float x) { return x > 0 ? x : 0; }
 
 
 /* Derivative of ReLU activation function

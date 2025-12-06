@@ -8,6 +8,8 @@
  *     __global__ void test_kernel(){}
  */
 
+__device__ float d_relu(float x) { return x > 0 ? x : 0; }
+
 __global__ void hidden_layer_kernel(
     const float* matrix,
     const float* vector,
@@ -40,7 +42,7 @@ __global__ void hidden_layer_kernel(
 
     // Thread 0 writes final result
     if (t_id == 0) {
-        result[j] = relu(partial[0] + b[j]);
+        result[j] = d_relu(partial[0] + b[j]);
     }
 
 }

@@ -19,15 +19,15 @@ typedef struct tagMODEL{
 } MODEL;
 
 // Activation function and derivative
-__host__ __device__ float relu(float x);
-__host__ float drelu(float y);
+float relu(float x);
+float drelu(float y);
 
 //function prototypes
-__host__ void softmax(float *z, float *out, int len);
-__host__ void init_weights(float *w, int size);
-__host__ void train_model(MODEL* model);
-__host__ void save_model(MODEL* model);
-__host__ void load_model(MODEL* model);
-__host__ void predict(float *x, MODEL* model);
+void softmax(float *z, float *out, int len);
+void init_weights(float *w, int size);
+void train_model(MODEL* model);
+void save_model(MODEL* model);
+void load_model(MODEL* model);
+void predict(float *x, MODEL* model);
 
 #endif
