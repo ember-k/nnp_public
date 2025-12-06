@@ -115,7 +115,7 @@ __global__ void hidden_delta_kernel(
     }
 
     if (t_id == 0) {
-        delta_result[j] = partial[0] * d_derelu(prev_activation[j]);
+        delta_result[j] = partial[0] * d_drelu(prev_activation[j]);
     }
 }
 
