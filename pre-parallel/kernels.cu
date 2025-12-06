@@ -101,7 +101,7 @@ __global__ void hidden_delta_kernel(
     float err = 0.0;
 
     for (int k = t_id; k < col_num; k += blockDim.x) {
-        err += matrix[j * col_num + k] * vector[k];
+        err += matrix[j * col_num + k] * delta_v[k];
     }
 
     partial[t_id] = err;
@@ -115,7 +115,7 @@ __global__ void hidden_delta_kernel(
     }
 
     if (t_id == 0) {
-        delta_result[j] = partial[0] * derelu(prev_activation[j])
+        delta_result[j] = partial[0] * d_derelu(prev_activation[j]);
     }
 }
 
@@ -131,7 +131,6 @@ __global__ void weight_update_kernel(
     int t_id = threadIdx.x;
 
     for (int i = t_id; i < row_num; i += blockDim.x) {
-        int idx = i * col_num + j;   // same indexing as forward kernel
         matrix[i * col_num + j] += lr * delta_v[j] * prev_activation[i];
     }
 }
