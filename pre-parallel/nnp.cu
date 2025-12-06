@@ -108,6 +108,12 @@ void train_model(MODEL* model){
     float* d_h1a;
     cudaMalloc(&d_h1a, H1 * sizeof(float));
 
+    float* d_h2a;
+    cudaMalloc(&d_h2a, H2 * sizeof(float));
+
+    float* d_out;
+    cudaMalloc(&d_out, CLASSES * sizeof(float));
+
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss=0;
         for (int n=0; n<NUM_TRAIN; n++) {
@@ -122,17 +128,22 @@ void train_model(MODEL* model){
             float h1a[H1];
             cudaMemcpy(h1a, d_h1a, H1 * sizeof(float), cudaMemcpyDeviceToHost);
 
-            float h2[H2], h2a[H2];
-            for (int j=0;j<H2;j++){
-                h2[j]=model->b2[j];
-                for (int i=0;i<H1;i++) h2[j]+=h1a[i]*model->W2[i*H2+j];
-                h2a[j]=relu(h2[j]);
-            }
+	    threads = min(H1, 256);  // min(row_num, 256);
+            blocks = H2;
+            shm = threads * sizeof(float);
+            hidden_layer_kernel<<<blocks, threads, shm>>>(d_W2, d_v, d_b2, d_h2a, H1, H2);
+
+            float h2a[H2];
+            cudaMemcpy(h2a, d_h2a, H2 * sizeof(float), cudaMemcpyDeviceToHost);
+
+            threads = min(H2, 256);  // min(row_num, 256);              
+            blocks = CLASSES; 
+            shm = threads * sizeof(float);
+            output_layer_kernel<<<blocks, threads, shm>>>(d_W3, d_v, d_b3, d_out, H2, CLASSES);
+
             float out[CLASSES], outa[CLASSES];
-            for (int k=0;k<CLASSES;k++){
-                out[k]=model->b3[k];
-                for (int j=0;j<H2;j++) out[k]+=h2a[j]*model->W3[j*CLASSES+k];
-            }
+            cudaMemcpy(out, d_out, CLASSES * sizeof(float), cudaMemcpyDeviceToHost);
+
             softmax(out,outa,CLASSES);
 
             // ---------- Loss ----------
@@ -176,7 +187,8 @@ void train_model(MODEL* model){
         }
         printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
-    cudaFree(d_W1); cudaFree(d_W2); cudaFree(d_W3); cudaFree(d_b1); cudaFree(d_b2); cudaFree(d_b3); cudaFree(d_h1a); cudaFree(d_v);
+    cudaFree(d_W1); cudaFree(d_W2); cudaFree(d_W3); cudaFree(d_b1); cudaFree(d_b2); cudaFree(d_b3); 
+    cudaFree(d_h1a); cudaFree(d_h2a); cudaFree(d_out); cudaFree(d_v);
 }
 
 /* Save the trained model to a binary file

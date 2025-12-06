@@ -17,3 +17,12 @@ __global__ void hidden_layer_kernel(
     int row_num,
     int col_num
 );
+
+__global__ void output_layer_kernel(
+    const float* matrix,
+    const float* vector,
+    const float* b,
+    float* result,
+    int row_num,
+    int col_num
+);

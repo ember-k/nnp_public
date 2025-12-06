@@ -46,8 +46,46 @@ __global__ void hidden_layer_kernel(
     }
 
 }
+/*
+ * Matrix - Vector multiplication + bias
+ * does't output the relu() value, but the pre-relu value.
+ */
+__global__ void output_layer_kernel(
+    const float* matrix,
+    const float* vector,
+    const float* b,
+    float* result,
+    int row_num,
+    int col_num
+){
+    
+    int j = blockIdx.x;                     // one block per col
+    int t_id = threadIdx.x;                  
+    extern __shared__ float partial[];
 
+    float partial_sum = 0.0;
 
+    // Each thread processes some rows
+    for (int i = t_id; i < row_num; i += blockDim.x) {
+        partial_sum += vector[i] * matrix[i * col_num + j];
+    }
+    partial[t_id] = partial_sum;
+    __syncthreads();
+
+    // parallel reduction
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (t_id < stride) {
+            partial[t_id] += partial[t_id + stride];
+        }
+        __syncthreads();
+    }
+
+    // Thread 0 writes final result
+    if (t_id == 0) {
+        result[j] = partial[0] + b[j];
+    }
+
+}
 
 /*
 
